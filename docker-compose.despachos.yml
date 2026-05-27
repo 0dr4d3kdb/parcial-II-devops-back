@@ -1,0 +1,36 @@
+services:
+  db-despachos:
+    image: mysql:8
+    container_name: db-despachos
+    restart: unless-stopped
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: despachos_db
+    volumes:
+      - mysql-despachos-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  despachos-api:
+    image: danibetancourt/back-despacho:latest
+    container_name: despachos-api
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      DB_ENDPOINT: db-despachos
+      DB_PORT: 3306
+      DB_NAME: despachos_db
+      DB_USERNAME: root
+      DB_PASSWORD: rootpass
+    depends_on:
+      db-despachos:
+        condition: service_healthy
+
+volumes:
+  mysql-despachos-data:
